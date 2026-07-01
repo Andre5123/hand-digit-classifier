@@ -1,4 +1,5 @@
-# This script collects live training data using the webcam
+# DEPRECATED
+# This script collects live training data using the manual webcam method.
 # Press f to freeze the recording, then click and drag to place a bounding box around a hand, then press a number to give it a class.
 # Repeat if needed for the 2nd hand. When you are done press d and it will save the frame, its bounding box annotations and crops of all of the bounded hands.
 
@@ -79,7 +80,7 @@ while True:
                 key = cv2.waitKey(0)
 
             if done==True: continue
-            
+
             digit = int(chr(key))
             print("This crop will be labelled", digit)
 
