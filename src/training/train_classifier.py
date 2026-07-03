@@ -7,41 +7,51 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..')) # To be able to a
 import tensorflow as tf
 
 from models.classifier import build_classifier
-from data.preprocess import make_classification_dataset
-
+from data.preprocess import make_custom_classification_datasets
 import math
 
-model = build_classifier()
+#model = build_classifier() #Toggle to restart a new model
+model = tf.keras.models.load_model("../../models/classifier_best.keras") # Toggle to keep improving on existing model
 model.compile(
-    optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), #Start with 0.001 initially.
     loss="sparse_categorical_crossentropy",
     metrics=['accuracy']
 )
 
-train_dataset, train_size = make_classification_dataset("../../data/raw/digits/train",32)
-valid_dataset, val_size  = make_classification_dataset("../../data/raw/digits/valid",32)
+train_dataset, val_dataset, test_dataset, train_size, val_size, test_size = make_custom_classification_datasets("../../data/custom/crops", 32, 0.7)
+
+model.summary()
+
+
+print(f"Train: {train_size}, Val: {val_size}, Test: {test_size}")
+
+
 
 model.fit(
     train_dataset,
-    epochs=10,
+    epochs=100,
     steps_per_epoch=math.ceil(train_size/32),
-    validation_data=valid_dataset,
+    validation_data=val_dataset,
     validation_steps=math.ceil(val_size/32),
     callbacks=[
         tf.keras.callbacks.ModelCheckpoint(
             filepath='../../models/classifier_best.keras',
             save_best_only=True,
-            monitor='val_accuracy'
+            monitor='val_accuracy',
+            mode='max',
         ),
         tf.keras.callbacks.EarlyStopping(
-            patience=5,
+            patience=15,
             monitor='val_accuracy',
+            mode='max',
             restore_best_weights=True
         ),
         tf.keras.callbacks.ReduceLROnPlateau(
             factor=0.5,
-            patience=3,
-            monitor='val_accuracy'
+            patience=8,
+            monitor='val_accuracy',
+            mode='max',
+            min_lr=1e-5
         )
     ]
 )
