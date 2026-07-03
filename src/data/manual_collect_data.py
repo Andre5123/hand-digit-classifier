@@ -62,7 +62,8 @@ while True:
         image_counter +=1
         done = False
 
-        cv2.imwrite(f"../../data/custom/images/frame_{image_counter:05d}.jpg", frame) # Save the current frame to images
+        resized_copy = cv2.resize(frame, (416, 416))
+        cv2.imwrite(f"../../data/custom/images/frame_{image_counter:05d}.jpg", resized_copy) # Save the current frame to images
         with open(f"../../data/custom/labels/frame_{image_counter:05d}.txt", "w") as f: #Open a new file for each image even if there is no info to store
             pass
         crop_number = 0
