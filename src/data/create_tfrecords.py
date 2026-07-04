@@ -2,7 +2,9 @@ import tensorflow as tf
 from pathlib import Path
 import numpy as np
 import cv2
-YOLO_GRID_SIZE = (13,13)
+
+IMG_SIZE_DETECTOR = (256,256,3)
+YOLO_GRID_SIZE = (8,8)
 
 def load_image_and_label(img_dir):
     label = np.zeros((YOLO_GRID_SIZE[0], YOLO_GRID_SIZE[1], 5)) # 5 is for the bounding box parameters. 
@@ -10,6 +12,7 @@ def load_image_and_label(img_dir):
     # Load and normalize img
     img = cv2.imread(img_dir)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.resize(img, (IMG_SIZE_DETECTOR[0], IMG_SIZE_DETECTOR[1]))
     img = (img/255.0).astype(np.float32)
 
     with open(Path(img_dir).parent.parent / "labels" / (Path(img_dir).stem+".txt"), "r") as f:
@@ -32,8 +35,8 @@ def load_image_and_label(img_dir):
 def create_example(img, label):
     img_uint8 = tf.cast(img * 255, tf.uint8)
     img_bytes = tf.io.encode_jpeg(img_uint8).numpy()
+    label = label.astype(np.float32)
     label_bytes = label.tobytes()
-    
     feature = {
         'image': tf.train.Feature(bytes_list=tf.train.BytesList(value=[img_bytes])),
         'label': tf.train.Feature(bytes_list=tf.train.BytesList(value=[label_bytes]))

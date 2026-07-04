@@ -9,10 +9,10 @@ import cv2
 import random
 from  pathlib import Path
 
-IMG_SIZE_DETECTOR = (416,416)
+IMG_SIZE_DETECTOR = (256,256,3)
 IMG_SIZE_CLASSIFIER = (128,128,3)
 
-YOLO_GRID_SIZE = (13,13)
+YOLO_GRID_SIZE = (8,8)
 
 def load_single_classification_image(img_dir, label): # Loading function so that the dataset doesn't have to store all of the images at once
     img_dir = img_dir.numpy().decode("utf-8")
@@ -67,13 +67,6 @@ def make_custom_classification_datasets(crops_dir:str, batch_size:int, train_pro
     
     return train_dataset, val_dataset, test_dataset, train_size, val_size, test_size
 
-
-
-
-
-
-# ----------------------------
-# Preprocessing an image for classifier testing (On live webcam)
 def preprocess_for_classifier(img):
      img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
      img = cv2.resize(img, (IMG_SIZE_CLASSIFIER[0], IMG_SIZE_CLASSIFIER[1]))
@@ -84,65 +77,64 @@ def preprocess_for_classifier(img):
 
 # ----------------------------
 # Detection dataset functions
-def load_single_detection(img_dir):
-    img_dir = img_dir.numpy().decode("utf-8")
-    label = np.zeros((YOLO_GRID_SIZE[0], YOLO_GRID_SIZE[1], 5)) # 5 is for the bounding box parameters. 
-    
-    # Load and normalize img
-    img = cv2.imread(img_dir)
+
+def preprocess_for_detector(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.resize(img, (IMG_SIZE_DETECTOR[0], IMG_SIZE_DETECTOR[1]))
     img = (img/255.0).astype(np.float32)
+    img = np.expand_dims(img, axis=0)  # add batch dim → (1, 128, 128, 3)
+    return img
 
-    with open(Path(img_dir).parent.parent / "labels" / (Path(img_dir).stem+".txt"), "r") as f:
-            lines = f.readlines()
-            for line in lines:
-                box_values = line.strip().split()
-                
-                # Ignore box_values[0], that is the class ID. There is only one class, hands, which is 0.
-                box_x = float(box_values[1]) # x-coord over the entire image, from 0 to 1.
-                box_y = float(box_values[2]) # y-coord over the entire image, from 0 to 1.
-                box_w = float(box_values[3])
-                box_h = float(box_values[4])
-
-                grid_cell_x = int(box_x*YOLO_GRID_SIZE[0]) # The indices of the grid cell that owns the bounding box
-                grid_cell_y = int(box_y*YOLO_GRID_SIZE[1])
-
-                label[grid_cell_y, grid_cell_x] = [1, box_x, box_y, box_w, box_h]
+def parse_detection_example(example_proto, augment=False):
+    feature_description = {
+        'image': tf.io.FixedLenFeature([], tf.string),
+        'label': tf.io.FixedLenFeature([], tf.string)
+    }
+    parsed = tf.io.parse_single_example(example_proto, feature_description)
+    
+    img = tf.io.decode_jpeg(parsed['image'], channels=3)
+    img = tf.cast(img, tf.float32) / 255.0
+    
+    label = tf.io.decode_raw(parsed['label'], tf.float32)
+    label = tf.reshape(label, (8, 8, 5))
+    
+    if augment:
+        # Horizontal flip
+        if tf.random.uniform(()) > 0.5:
+            img = tf.image.flip_left_right(img)
+            objectness = label[..., 0:1]
+            x = 1.0 - label[..., 1:2]
+            ywh = label[..., 2:]
+            label = tf.concat([objectness, x, ywh], axis=-1)
+        
+        # Brightness and contrast
+        img = tf.image.random_brightness(img, 0.2)
+        img = tf.image.random_contrast(img, 0.7, 1.3)
+        img = tf.image.random_hue(img, 0.1)
+        img = tf.clip_by_value(img, 0.0, 1.0)
+    
     return img, label
 
-def make_custom_detection_dataset(img_paths, batch_size):
-    dataset = tf.data.Dataset.from_tensor_slices(img_paths)
-    dataset = dataset.map(lambda x: tf.py_function( 
-        load_single_detection, [x], [tf.float32, tf.float32],
-    ), num_parallel_calls=tf.data.AUTOTUNE)
-
-    dataset = dataset.map(lambda img, label: (
-        tf.ensure_shape(img, (IMG_SIZE_DETECTOR[0],IMG_SIZE_DETECTOR[1],3)),
-        tf.ensure_shape(label, (13,13,5)),
-    ))
-    dataset = dataset.repeat()
-    dataset = dataset.batch(batch_size)
-    dataset = dataset.prefetch(tf.data.AUTOTUNE)
-    return dataset
-
-def make_custom_detection_datasets(data_dir, batch_size, train_proportion):
-    dataset_path = Path(data_dir)
-    img_paths = list(dataset_path.glob("*.jpg"))
-    num_imgs = len(img_paths)
-
-    img_paths = [str(img) for img in img_paths]
-
-    random.seed(42)
-    random.shuffle(img_paths)
+def make_tf_records_detection_datasets(tfrecord_path, batch_size, train_proportion):
+    num_imgs = sum(1 for _ in tf.data.TFRecordDataset(tfrecord_path))
+    dataset = tf.data.TFRecordDataset(tfrecord_path) # Take the dataset out of a tfrecord file because the images too large to process on the fly
+    dataset = dataset.shuffle(num_imgs, seed=42, reshuffle_each_iteration=False)
+    
 
     train_size = int(train_proportion*num_imgs)
     val_size = int((num_imgs-train_size)/2)
-    test_size = num_imgs - train_size - val_size
+    test_size = num_imgs-train_size-val_size
+    train_dataset = dataset.take(train_size)
+    val_dataset = dataset.skip(train_size).take(val_size)
+    test_dataset = dataset.skip(train_size+val_size)
 
-    train_dataset = make_custom_detection_dataset(img_paths[:train_size], batch_size)
-    val_dataset = make_custom_detection_dataset(img_paths[train_size:train_size+val_size], batch_size)
-    test_dataset = make_custom_detection_dataset(img_paths[train_size+val_size:], batch_size)
-    
+    train_dataset = train_dataset.map(lambda x: parse_detection_example(x, augment=True))
+    val_dataset = val_dataset.map(lambda x: parse_detection_example(x, augment=False))
+    test_dataset = test_dataset.map(lambda x: parse_detection_example(x, augment=False))
+
+    train_dataset = train_dataset.repeat().batch(batch_size)
+    val_dataset = val_dataset.repeat().batch(batch_size)
+    test_dataset = test_dataset.repeat().batch(batch_size)
     return train_dataset, val_dataset, test_dataset, train_size, val_size, test_size
     
     
@@ -178,7 +170,7 @@ def make_classification_dataset(data_dir, batch_size):
     ))
     
     dataset = dataset.map(lambda img, label: (
-        tf.ensure_shape(img, (128,128,1)),
+        tf.ensure_shape(img, (IMG_SIZE_CLASSIFIER[0],IMG_SIZE_CLASSIFIER[1],3)),
         tf.ensure_shape(label, ()),
     ))
     

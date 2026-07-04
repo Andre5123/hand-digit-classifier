@@ -12,12 +12,15 @@ def yolo_loss(y_true, y_pred):
     box_coord_pred = y_pred[...,1:]
 
     objectness_mask = (objectness_labels == 1) # Boolean mask as to whether a box contains an object or not
+    objectness_mask_float = tf.cast(objectness_mask, tf.float32)
     objectness_mask_expanded = tf.cast(objectness_mask, tf.float32)[..., tf.newaxis] # Cast a new axis so that it can broadcast onto box_mse
     
     box_mse = (box_coord_labels-box_coord_pred)**2
     box_mse = box_mse * objectness_mask_expanded # Only calculate box MSE in cells where there is actually an object
 
-    box_loss = tf.reduce_mean(box_mse)
+    num_positive = tf.reduce_sum(objectness_mask_float) + 1e-7
+    box_loss = tf.reduce_sum(box_mse) / num_positive
+
     objectness_loss = tf.keras.losses.binary_crossentropy(
         objectness_labels[...,tf.newaxis], 
         objectness_pred[...,tf.newaxis], 
@@ -40,7 +43,6 @@ def iou_metric(y_true, y_pred):
 
     true_boxes = y_true[...,1:]
     pred_boxes = y_pred[...,1:]
-
     true_x1 = true_boxes[..., 0] - true_boxes[..., 2]/2
     true_x2 = true_boxes[..., 0] + true_boxes[..., 2]/2
     true_y1 = true_boxes[..., 1] - true_boxes[..., 3]/2

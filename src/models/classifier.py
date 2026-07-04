@@ -13,16 +13,17 @@ def conv_block(x, n_filters):
     output = layers.MaxPool2D(pool_size=(2,2))(x)
     return output
 
-def build_classifier(input_shape=(128,128,1), num_classes=6, dropout_rate=0.5):
+def build_classifier(input_shape=(128,128,3), num_classes=6, dropout_rate=0.0):
     
     image_inputs = keras.Input(shape=input_shape)
     x = conv_block(image_inputs, 32)
     x = conv_block(x, 64)
     x = conv_block(x, 128)
     x = conv_block(x, 256)
-    x = layers.Flatten()(x)
-    x = layers.Dense(units=512, activation='relu')(x)
-    x = layers.Dropout(rate=dropout_rate)(x)
+    x = layers.Flatten()(x) # Flattens
+    x = layers.Dense(units=1024, activation='relu')(x)
+    #x = layers.Dropout(rate=dropout_rate)(x)
+    x = layers.Dense(512, activation='relu')(x)
     outputs = layers.Dense(units=num_classes, activation='softmax')(x)
 
     model = keras.Model(inputs=image_inputs, outputs=outputs, name="classifier_model")
