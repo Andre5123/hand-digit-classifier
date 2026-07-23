@@ -19,73 +19,74 @@ capture_sequence_captions = [] # Customize this. It will display these captions 
 
 
 
-break_interval = 4 # After how many photo captures should you take a break? 
+break_interval = 10 # After how many photo captures should you take a break? 
 break_time = 5 # How long the break should last
-countdown_time = 5 # How long the break should last
+countdown_time = 0.5 # How long the break should last
 
 
 single_hand = False
 # Single hand images. Remember to set break interval to 17.
 if single_hand:
-    capture_sequence_captions.extend(["0 Left"]*17)
-    capture_sequence_captions.extend(["0 Right"]*17)
-    capture_sequence_captions.extend(["1 Left"]*17)
-    capture_sequence_captions.extend(["1 Right"]*17)
-    capture_sequence_captions.extend(["2 Left"]*17)
-    capture_sequence_captions.extend(["2 Right"]*17)
-    capture_sequence_captions.extend(["3 Left"]*17)
-    capture_sequence_captions.extend(["3 Right"]*17)
-    capture_sequence_captions.extend(["4 Left"]*17)
-    capture_sequence_captions.extend(["4 Right"]*17)
-    capture_sequence_captions.extend(["5 Left"]*17)
-    capture_sequence_captions.extend(["5 Right"]*17)
+    capture_sequence_captions.extend(["0 Left"]*50)
+    capture_sequence_captions.extend(["0 Right"]*50)
+    capture_sequence_captions.extend(["1 Left"]*50)
+    capture_sequence_captions.extend(["1 Right"]*50)
+    capture_sequence_captions.extend(["2 Left"]*50)
+    capture_sequence_captions.extend(["2 Right"]*50)
+    capture_sequence_captions.extend(["3 Left"]*50)
+    capture_sequence_captions.extend(["3 Right"]*50)
+    capture_sequence_captions.extend(["4 Left"]*50)
+    capture_sequence_captions.extend(["4 Right"]*50)
+    capture_sequence_captions.extend(["5 Left"]*50)
+    capture_sequence_captions.extend(["5 Right"]*50)
 else: # Toggle for adding two hand pictures. Remember to set break interval to 4. 
-    #capture_sequence_captions.extend(["0 Left - 0 Right"]*8)
+    capture_sequence_captions.extend(["5 Left - 5 Right"]*10)
+    capture_sequence_captions.extend(["0 Left - 0 Right"]*20)
 
-    #capture_sequence_captions.extend(["0 Left - 1 Right"]*4)
-    #capture_sequence_captions.extend(["0 Left - 2 Right"]*4)
-    #capture_sequence_captions.extend(["0 Left - 3 Right"]*4)
-    #capture_sequence_captions.extend(["0 Left - 4 Right"]*4)
-    #capture_sequence_captions.extend(["0 Left - 5 Right"]*4)
-    #capture_sequence_captions.extend(["1 Left - 0 Right"]*4)
-    #capture_sequence_captions.extend(["2 Left - 0 Right"]*4)
-    #capture_sequence_captions.extend(["3 Left - 0 Right"]*4)
-    #capture_sequence_captions.extend(["4 Left - 0 Right"]*4)
-    #capture_sequence_captions.extend(["5 Left - 0 Right"]*4)
+    capture_sequence_captions.extend(["0 Left - 1 Right"]*10)
+    capture_sequence_captions.extend(["0 Left - 2 Right"]*10)
+    capture_sequence_captions.extend(["0 Left - 3 Right"]*10)
+    capture_sequence_captions.extend(["0 Left - 4 Right"]*10)
+    capture_sequence_captions.extend(["0 Left - 5 Right"]*10)
+    capture_sequence_captions.extend(["1 Left - 0 Right"]*10)
+    capture_sequence_captions.extend(["2 Left - 0 Right"]*10)
+    capture_sequence_captions.extend(["3 Left - 0 Right"]*10)
+    capture_sequence_captions.extend(["4 Left - 0 Right"]*10)
+    capture_sequence_captions.extend(["5 Left - 0 Right"]*10)
 
-    #capture_sequence_captions.extend(["1 Left - 1 Right"]*8)
+    capture_sequence_captions.extend(["1 Left - 1 Right"]*20)
+    
+    capture_sequence_captions.extend(["1 Left - 2 Right"]*10)
+    capture_sequence_captions.extend(["1 Left - 3 Right"]*10)
+    capture_sequence_captions.extend(["1 Left - 4 Right"]*10)
+    capture_sequence_captions.extend(["1 Left - 5 Right"]*10)
+    capture_sequence_captions.extend(["2 Left - 1 Right"]*10)
+    capture_sequence_captions.extend(["3 Left - 1 Right"]*10)
+    capture_sequence_captions.extend(["4 Left - 1 Right"]*10)
+    capture_sequence_captions.extend(["5 Left - 1 Right"]*10)
 
-    #capture_sequence_captions.extend(["1 Left - 2 Right"]*4)
-    #capture_sequence_captions.extend(["1 Left - 3 Right"]*4)
-    #capture_sequence_captions.extend(["1 Left - 4 Right"]*4)
-    #capture_sequence_captions.extend(["1 Left - 5 Right"]*4)
-    #capture_sequence_captions.extend(["2 Left - 1 Right"]*4)
-    #capture_sequence_captions.extend(["3 Left - 1 Right"]*4)
-    #capture_sequence_captions.extend(["4 Left - 1 Right"]*4)
-    #capture_sequence_captions.extend(["5 Left - 1 Right"]*4)
+    capture_sequence_captions.extend(["2 Left - 2 Right"]*20)
 
-    #capture_sequence_captions.extend(["2 Left - 2 Right"]*8)
+    capture_sequence_captions.extend(["2 Left - 3 Right"]*10)
+    capture_sequence_captions.extend(["2 Left - 4 Right"]*10)
+    capture_sequence_captions.extend(["2 Left - 5 Right"]*10)
+    capture_sequence_captions.extend(["3 Left - 2 Right"]*10)
+    capture_sequence_captions.extend(["4 Left - 2 Right"]*10)
+    capture_sequence_captions.extend(["5 Left - 2 Right"]*10)
 
-    #capture_sequence_captions.extend(["2 Left - 3 Right"]*4)
-    #capture_sequence_captions.extend(["2 Left - 4 Right"]*4)
-    #capture_sequence_captions.extend(["2 Left - 5 Right"]*4)
-    #capture_sequence_captions.extend(["3 Left - 2 Right"]*4)
-    #capture_sequence_captions.extend(["4 Left - 2 Right"]*4)
-    #capture_sequence_captions.extend(["5 Left - 2 Right"]*4)
+    capture_sequence_captions.extend(["3 Left - 3 Right"]*20)
 
-    #capture_sequence_captions.extend(["3 Left - 3 Right"]*8)
+    capture_sequence_captions.extend(["3 Left - 4 Right"]*10)
+    capture_sequence_captions.extend(["3 Left - 5 Right"]*10)
+    capture_sequence_captions.extend(["4 Left - 3 Right"]*10)
+    capture_sequence_captions.extend(["5 Left - 3 Right"]*10)
 
-    #capture_sequence_captions.extend(["3 Left - 4 Right"]*4)
-    #capture_sequence_captions.extend(["3 Left - 5 Right"]*4)
-    capture_sequence_captions.extend(["4 Left - 3 Right"]*4)
-    capture_sequence_captions.extend(["5 Left - 3 Right"]*4)
+    capture_sequence_captions.extend(["4 Left - 4 Right"]*20)
 
-    capture_sequence_captions.extend(["4 Left - 4 Right"]*8)
+    capture_sequence_captions.extend(["4 Left - 5 Right"]*10)
+    capture_sequence_captions.extend(["5 Left - 4 Right"]*10)
 
-    capture_sequence_captions.extend(["4 Left - 5 Right"]*4)
-    capture_sequence_captions.extend(["5 Left - 4 Right"]*4)
-
-    capture_sequence_captions.extend(["5 Left - 5 Right"]*8)
+    capture_sequence_captions.extend(["5 Left - 5 Right"]*20)
 
 
 

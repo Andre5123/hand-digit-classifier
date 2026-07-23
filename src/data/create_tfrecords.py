@@ -6,13 +6,15 @@ import cv2
 IMG_SIZE_DETECTOR = (256,256,3)
 YOLO_GRID_SIZE = (8,8)
 
+
+
 def load_image_and_label(img_dir):
-    label = np.zeros((YOLO_GRID_SIZE[0], YOLO_GRID_SIZE[1], 5)) # 5 is for the bounding box parameters. 
+    label = np.zeros((YOLO_GRID_SIZE[0], YOLO_GRID_SIZE[1], 11)) # 5 is for the bounding box parameters. 
     
     # Load and normalize img
     img = cv2.imread(img_dir)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (IMG_SIZE_DETECTOR[0], IMG_SIZE_DETECTOR[1]))
+    # img = cv2.resize(img, (IMG_SIZE_DETECTOR[0], IMG_SIZE_DETECTOR[1])) #Removed this line for now, since the resizing will occur after augmentation in preprocess.py. All that is needed is to store the image currently
     img = (img/255.0).astype(np.float32)
 
     with open(Path(img_dir).parent.parent / "labels" / (Path(img_dir).stem+".txt"), "r") as f:
@@ -20,7 +22,7 @@ def load_image_and_label(img_dir):
             for line in lines:
                 box_values = line.strip().split()
                 
-                # Ignore box_values[0], that is the class ID. There is only one class, hands, which is 0.
+                box_class = int(box_values[0])
                 box_x = float(box_values[1]) # x-coord over the entire image, from 0 to 1.
                 box_y = float(box_values[2]) # y-coord over the entire image, from 0 to 1.
                 box_w = float(box_values[3])
@@ -29,7 +31,10 @@ def load_image_and_label(img_dir):
                 grid_cell_x = int(box_x*YOLO_GRID_SIZE[0]) # The indices of the grid cell that owns the bounding box
                 grid_cell_y = int(box_y*YOLO_GRID_SIZE[1])
 
-                label[grid_cell_y, grid_cell_x] = [1, box_x, box_y, box_w, box_h]
+                one_hot = np.zeros(6)
+                one_hot[box_class] = 1
+
+                label[grid_cell_y, grid_cell_x] = [1, box_x, box_y, box_w, box_h, *one_hot]
     return img, label
 
 def create_example(img, label):
@@ -46,6 +51,8 @@ def create_example(img, label):
 with tf.io.TFRecordWriter("../../data/custom/detection.tfrecord") as writer:
     img_paths = list(Path("../../data/custom/images").glob("*.jpg"))
     for img_path in img_paths:
-        img, label = load_image_and_label(str(img_path))
-        example = create_example(img, label)
-        writer.write(example.SerializeToString())
+        label_path =  Path(img_path).parent.parent / "labels" / (Path(img_path).stem+".txt")
+        if label_path.exists(): # This is a valid annotated example
+            img, label = load_image_and_label(str(img_path))
+            example = create_example(img, label)
+            writer.write(example.SerializeToString())
